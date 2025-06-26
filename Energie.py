@@ -10,7 +10,11 @@ from rapidfuzz import process, fuzz
 st.set_page_config(layout="wide", page_title="Sélection intelligente des fournisseurs d'énergie")
 
 # --- CRÉER LE CLIENT OPENAI
-client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+try:
+    client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+except KeyError:
+    st.error("❌ Clé API OpenAI manquante dans st.secrets. Ajoutez-la dans `.streamlit/secrets.toml`.")
+    st.stop()
 
 # --- INTERFACE
 st.title("Sélection intelligente des fournisseurs d'énergie")
@@ -55,21 +59,16 @@ def apply_filters(df, conditions):
             st.warning(f"Colonne inconnue : {col}")
             continue
 
-        # Normaliser l'opérateur '=' en '=='
         if op == "=":
             op = "=="
 
         try:
             if op.lower() in ["==", "!=", "contient"] and df_filtered[col_matched].dtype == object:
                 unique_vals = df_filtered[col_matched].dropna().unique()
-                if str(val) in map(str, unique_vals):
-                    corrected_val = val
-                else:
-                    corrected_val = get_best_value_match(val, unique_vals)
-                if corrected_val != val:
-                    
-                    val = corrected_val
+                corrected_val = get_best_value_match(val, unique_vals)
+                val = corrected_val
 
+            # ✅ Utilisation de backticks pour noms de colonnes
             if op in [">", "<", ">=", "<=", "==", "!="]:
                 df_filtered = df_filtered.query(f"`{col_matched}` {op} @val")
             elif op.lower() == "contient":
@@ -84,7 +83,6 @@ def apply_filters(df, conditions):
 # --- TRAITEMENT
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
- 
 
     PROMPT_TEMPLATE = f"""
     Tu es un assistant qui extrait des conditions de filtrage pour une base de données Excel.
