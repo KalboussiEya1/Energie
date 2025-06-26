@@ -1,0 +1,9 @@
+streamlit
+pandas
+openai>=1.0.0
+toml
+xlsxwriter
+openpyxl
+rapidfuzz
+fuzzywuzzy
+python-Levenshtein
