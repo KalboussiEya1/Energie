@@ -68,17 +68,28 @@ def apply_filters(df, conditions):
                 corrected_val = get_best_value_match(val, unique_vals)
                 val = corrected_val
 
-            # ✅ Utilisation de backticks pour noms de colonnes
-            if op in [">", "<", ">=", "<=", "==", "!="]:
-                df_filtered = df_filtered.query(f"`{col_matched}` {op} @val")
+            if op == "==":
+                df_filtered = df_filtered[df_filtered[col_matched] == val]
+            elif op == "!=":
+                df_filtered = df_filtered[df_filtered[col_matched] != val]
+            elif op == ">":
+                df_filtered = df_filtered[df_filtered[col_matched] > val]
+            elif op == "<":
+                df_filtered = df_filtered[df_filtered[col_matched] < val]
+            elif op == ">=":
+                df_filtered = df_filtered[df_filtered[col_matched] >= val]
+            elif op == "<=":
+                df_filtered = df_filtered[df_filtered[col_matched] <= val]
             elif op.lower() == "contient":
                 df_filtered = df_filtered[df_filtered[col_matched].astype(str).str.contains(str(val), case=False, na=False)]
             else:
                 st.warning(f"Opérateur inconnu : {op}")
+
         except Exception as e:
             st.warning(f"Erreur lors du filtrage sur '{col_matched}' : {e}")
 
     return df_filtered
+
 
 # --- TRAITEMENT
 if uploaded_file:
